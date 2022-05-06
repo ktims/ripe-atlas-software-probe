@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Prepare build environment
         run: |
-          sudo apt install -q -y ${{ build_deps }}
+          sudo apt install -q -y ${{ env.build_deps }}
 
       - uses: actions/checkout@v3
         with:
@@ -66,12 +66,12 @@ jobs:
           shell: /bin/bash
           install: |
             apt update -q -y
-            apt install -q -y ${{ build_deps }}
+            apt install -q -y ${{ env.build_deps }}
           run: |
             $GITHUB_WORKSPACE/build-config/debian/bin/make-deb
-            cp *.deb /artifacts/${{ artifact_name }}.deb
+            cp *.deb /artifacts/${{ env.artifact_name }}.deb
       - name: Create Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ artifact_name }}
-          path: ${PWD}/artifacts/${{ artifact_name }}.deb
+          name: ${{ env.artifact_name }}
+          path: ${PWD}/artifacts/${{ env.artifact_name }}.deb
