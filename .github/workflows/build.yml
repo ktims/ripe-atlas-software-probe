@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build_x64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: DEB build on x64
     env:
       artifact_name: atlas_software_probe_x64
@@ -41,7 +41,7 @@ jobs:
           name: ${{ env.artifact_name }}
           path: ${{ env.artifact_name }}.deb
   build_all_archs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: DEB build on ${{ matrix.arch }}
     env:
       artifact_name: atlas_software_probe_${{ matrix.arch }}
@@ -50,9 +50,9 @@ jobs:
       matrix:
         include:
           - arch: aarch64
-            distro: ubuntu_latest
+            distro: ubuntu20.04
           - arch: armv7
-            distro: bullseye
+            distro: ubuntu20.04
           - arch: armv6
             distro: bullseye
 
@@ -84,7 +84,7 @@ jobs:
           path: artifacts/${{ env.artifact_name }}.deb
 
   deploy_prod_repo:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Deploy repo
     needs:
       - build_x64
