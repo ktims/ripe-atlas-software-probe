@@ -97,7 +97,7 @@ jobs:
         run: |
           aptly repo create ripe-atlas-software-probe
           for f in */*.deb; do
-            FN=`dpkg -f $f package`-`dpkg -f $f version`-`dpkg -f $f architecture`
+            FN=`dpkg -f $f package`-`dpkg -f $f version`-`dpkg -f $f architecture`.deb
             mv $f $FN
             aptly repo add ripe-atlas-software-probe $FN
           done
