@@ -89,8 +89,8 @@ jobs:
     steps:
       - name: Prepare environment
         run: |
-          apt update -q -y
-          apt install -q -y aptly
+          sudo apt update -q -y
+          sudo apt install -q -y aptly
       - name: Retrieve artifacts
         uses: actions/download-artifact@v3
       - name: Build repository
