@@ -91,7 +91,8 @@ jobs:
       - name: Prepare environment
         run: |
           sudo apt update -q -y
-          sudo apt install -q -y aptly
+          sudo apt install -q -y aptly jq
+          jq -n "setpath([\"rootDir\"]; \"`pwd`/repo\")" > $HOME/.aptly.conf
       - name: Retrieve artifacts
         uses: actions/download-artifact@v3
       - name: Build repository
@@ -107,5 +108,5 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4.3.3
         with:
           branch: gh-pages
-          folder: .aptly/public/
+          folder: repo/public
           target-folder: repo
