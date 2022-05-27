@@ -1,18 +1,24 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: Build DEB Packages
+name: Build DEB Packages for releases
 
 on:
-  release:
   push:
+  release:
+    types: [published]
   workflow_dispatch:
 
 env:
-  build_deps: git tar fakeroot libssl-dev libcap2-bin autoconf automake libtool build-essential
+  build_deps: git tar fakeroot libssl-dev libcap2-bin autoconf automake libtool build-essential\
+
+permissions:
+  contents: write
 
 jobs:
   build_x64:
     runs-on: ubuntu-latest
     name: DEB build on x64
+    env:
+      artifact_name: atlas_software_probe_x64
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -27,12 +33,13 @@ jobs:
       - name: Build Package
         run: |
           $GITHUB_WORKSPACE/build-config/debian/bin/make-deb
+          mv *.deb ${{ env.artifact_name }}.deb
       
       - name: Create Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: atlas_software_probe_x64
-          path: ./*.deb
+          name: ${{ env.artifact_name }}
+          path: ${{ env.artifact_name }}.deb
   build_all_archs:
     runs-on: ubuntu-latest
     name: DEB build on ${{ matrix.arch }}
@@ -75,3 +82,29 @@ jobs:
         with:
           name: ${{ env.artifact_name }}
           path: artifacts/${{ env.artifact_name }}.deb
+
+  deploy_prod_repo:
+    runs-on: ubuntu-latest
+    name: Deploy repo
+    steps:
+      - name: Prepare environment
+        run: |
+          apt update -q -y
+          apt install -q -y aptly
+      - name: Retrieve artifacts
+        uses: actions/download-artifact@v3
+      - name: Build repository
+        run: |
+          aptly repo create ripe-atlas-software-probe
+          for f in */*.deb; do
+            FN=`dpkg -f $f package`-`dpkg -f $f version`-`dpkg -f $f architecture`
+            mv $f $FN
+            aptly repo add ripe-atlas-software-probe $FN
+          done
+          aptly publish repo -distribution=main -skip-signing ripe-atlas-software-probe
+      - name: Publish repository
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          branch: gh-pages
+          folder: .aptly/public/
+          target-folder: repo
