@@ -1,3 +1,0 @@
-[submodule "github-busybox"]
-	path = probe-busybox
-	url = https://github.com/RIPE-NCC/ripe-atlas-probe-busybox.git
