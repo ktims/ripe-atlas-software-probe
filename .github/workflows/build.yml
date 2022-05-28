@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Build and Deploy
+
+on:
+  push:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  build_deps: git tar fakeroot libssl-dev libcap2-bin autoconf automake libtool build-essential\
+
+permissions:
+  contents: write
+
+jobs:
+  build_x64:
+    runs-on: ubuntu-20.04
+    name: DEB build on x64
+    env:
+      artifact_name: atlas_software_probe_x64
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Prepare build environment
+        run: |
+          sudo apt install -q -y ${{ env.build_deps }}
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Build Package
+        run: |
+          $GITHUB_WORKSPACE/build-config/debian/bin/make-deb
+          mv *.deb ${{ env.artifact_name }}.deb
+      
+      - name: Create Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.artifact_name }}
+          path: ${{ env.artifact_name }}.deb
+  build_all_archs:
+    runs-on: ubuntu-20.04
+    name: DEB build on ${{ matrix.arch }}
+    env:
+      artifact_name: atlas_software_probe_${{ matrix.arch }}
+
+    strategy:
+      matrix:
+        include:
+          - arch: aarch64
+            distro: ubuntu20.04
+          - arch: armv6
+            distro: bullseye
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: Build on arch ${{ matrix.arch }}
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: ${{ matrix.arch }}
+          distro: ${{ matrix.distro }}
+          githubToken: ${{ github.token }}
+          setup: |
+            mkdir -p "${PWD}/artifacts"
+          dockerRunArgs: |
+            --volume "${PWD}/artifacts:/artifacts"
+          shell: /bin/bash
+          install: |
+            apt update -q -y
+            apt install -q -y ${{ env.build_deps }}
+          run: |
+            $GITHUB_WORKSPACE/build-config/debian/bin/make-deb
+            cp *.deb /artifacts/${{ env.artifact_name }}.deb
+      - name: Create Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.artifact_name }}
+          path: artifacts/${{ env.artifact_name }}.deb
+
+  deploy_prod_repo:
+    runs-on: ubuntu-20.04
+    name: Deploy repo
+    needs:
+      - build_x64
+      - build_all_archs
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+      - name: Prepare environment
+        run: |
+          sudo apt update -q -y
+          sudo apt install -q -y aptly jq
+          jq -n "setpath([\"rootDir\"]; \"`pwd`/repo\")" > $HOME/.aptly.conf
+      - name: Retrieve artifacts
+        uses: actions/download-artifact@v3
+      - name: Build repository
+        run: |
+          aptly repo create ripe-atlas-software-probe
+          for f in */*.deb; do
+            FN=`dpkg -f $f package`-`dpkg -f $f version`-`dpkg -f $f architecture`.deb
+            mv $f $FN
+            aptly repo add ripe-atlas-software-probe $FN
+          done
+          aptly publish repo -distribution=main -skip-signing ripe-atlas-software-probe
+      - name: Publish repository
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          branch: gh-pages
+          folder: repo/public
+          target-folder: repo
