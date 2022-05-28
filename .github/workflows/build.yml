@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: Build DEB Packages for releases
+name: Build and Deploy
 
 on:
   push:
@@ -104,6 +104,9 @@ jobs:
             aptly repo add ripe-atlas-software-probe $FN
           done
           aptly publish repo -distribution=main -skip-signing ripe-atlas-software-probe
+      - uses: actions/checkout@v3
+        with:
+          ref: gh-pages
       - name: Publish repository
         uses: JamesIves/github-pages-deploy-action@v4.3.3
         with:
