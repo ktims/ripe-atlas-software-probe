@@ -1,0 +1,15 @@
+Package: atlasswprobe
+Priority: optional
+Section: base
+Maintainer: Philip Homburg <phomburg@ripe.net>
+Architecture: armhf
+Version: 5040-1
+Filename: pool/main/a/atlasswprobe/atlasswprobe-5040-1-armhf.deb
+Size: 522252
+MD5sum: 8b0ee01cbf5d143a513e321135ed4173
+SHA1: 0ec7dfb43605593029122440bb1f0b3195edddf6
+SHA256: e7cce9a804626a532ea9ae90839a36577ee47c9392780c605de50e7c708d27fc
+SHA512: f05f1a70cb348805a19be7f33b7a57cac32f700f1af7210aef85fb41ac449f244e088238d06397d5d9e362d3ef4b1a7b8f2601bc67bef1e5a2673c67140af560
+Description: RIPE Atlas Software probe
+ Debian version of RIPE Atlas probe software
+
