@@ -88,6 +88,9 @@ jobs:
       - build_x64
       - build_all_archs
     steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: gh-pages
       - name: Prepare environment
         run: |
           sudo apt update -q -y
@@ -104,9 +107,6 @@ jobs:
             aptly repo add ripe-atlas-software-probe $FN
           done
           aptly publish repo -distribution=main -skip-signing ripe-atlas-software-probe
-      - uses: actions/checkout@v3
-        with:
-          ref: gh-pages
       - name: Publish repository
         uses: JamesIves/github-pages-deploy-action@v4.3.3
         with:
